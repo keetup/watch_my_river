@@ -8,35 +8,53 @@
 elgg_register_event_handler('init', 'system', 'wmr_init');
 
 function wmr_init() {
-    //Register the event when plugin is deactivated
-    elgg_register_event_handler('deactivate', 'plugin', 'wmr_on_deactivate_plugin');
+    /** 
+     * Register the event when plugin is deactivated
+     * @FIXME: This will not work as desired.
+     * The wanted result, should be, after flush cache when the module is disabled
+     * 
+     * ElggCore package do not support an event or a plugin hook when cache is clear
+     */
+    
+//    elgg_register_event_handler('deactivate', 'plugin', 'wmr_on_deactivate_plugin');
 
     //Register a cron to fix the river items
     elgg_register_plugin_hook_handler('cron', 'daily', 'wmr_fix_river_items');
 
-    //Add a button on dashboard to fix plugins river items
+    //Add a button on dashboard widget to fix plugins river items
     elgg_register_menu_item('admin_control_panel', array(
         'name' => 'fix_plugins',
         'text' => elgg_echo('wmr:fix_items'),
         'href' => 'watch_my_river/fixme',
         'link_class' => 'elgg-button elgg-button-action',
     ));
-    
+
     elgg_register_page_handler('watch_my_river', 'wmr_page_handler');
+    
+    run_function_once('wmr_create_database');
 }
 
 function wmr_page_handler($page) {
     admin_gatekeeper();
-    
+
     /**
-     *We have only one page, "fixme" one that will fix items 
+     * We have only one page, "fixme" one that will fix items 
      */
-    
-    $river_views = wmr_fix_river_items();
+    wmr_fix_river_items();
     system_message(elgg_echo('wmr:fixme:success'));
     forward(REFERER);
 }
 
+/**
+ * This will generate a disabled table to move river items on them
+ * 
+ * @return boolean 
+ */
+function wmr_create_database() {
+    $schema_file = elgg_get_plugins_path().'watch_my_river/schema/mysql.sql';
+    run_sql_script($schema_file);
+    return TRUE;
+}
 
 /**
  * Event when plugin is deactivate
@@ -69,12 +87,6 @@ function wmr_river_callback($row) {
         $wmr_ob->disable_items = 'no';
     } else {
         $wmr_ob->disable_items = 'yes';
-        /**
-         * @TODO: Make some process to hide or to remove the items, maybe move them
-         * to a tmp table
-         *  But instead make a tmp table, should be great 
-         * that river items has disable/enable support, like every entities
-         */
     }
 
     return $wmr_ob;
@@ -89,5 +101,12 @@ function wmr_fix_river_items() {
 
     $river_views = get_data($query_get_rivers, 'wmr_river_callback');
 
+    /**
+     * @TODO: Make some process to hide or to remove the items, maybe move them
+     * to a tmp table
+     *  But instead make a tmp table, should be great 
+     * that river items has disable/enable support, like every entities
+     */
+    
     return $river_views;
 }

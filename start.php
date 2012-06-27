@@ -119,7 +119,7 @@ function wmr_fix_river_items() {
     if (is_array($disabled_river_views)) {
         foreach ($disabled_river_views as $disabled_view) {
             if ($wmr_ob->disable_items == 'no') {
-                //Move them to river_disabled
+                //Move them to river
                 wmr_move_to_enabled($disabled_view->view);
             }
         }

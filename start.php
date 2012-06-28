@@ -118,7 +118,7 @@ function wmr_fix_river_items() {
     //If the view on disabled river items exists, then enable
     if (is_array($disabled_river_views)) {
         foreach ($disabled_river_views as $disabled_view) {
-            if ($wmr_ob->disable_items == 'no') {
+            if ($disabled_view->disable_items == 'no') {
                 //Move them to river
                 wmr_move_to_enabled($disabled_view->view);
             }
